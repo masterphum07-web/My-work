@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Presentation - กลุ่มที่ 7: ระบบสืบพันธุ์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc; /* Slate 50 - Light, calm background */
+            color: #334155; /* Slate 700 - Readable text */
+        }
+        
+        /* Required Chart Container Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 280px;
+            }
+        }
+
+        /* Tab Content Animation */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* HTML/CSS Diagram (NO SVG) */
+        .anatomy-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            flex-wrap: wrap;
+        }
+        .organ {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+            color: #475569;
+            border: 3px solid transparent;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+        }
+        .organ:hover, .organ.active {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+        .organ-ovary {
+            width: 70px;
+            height: 90px;
+            border-radius: 50%;
+        }
+        .organ-tube {
+            width: 140px;
+            height: 40px;
+            border-radius: 20px;
+        }
+        .organ-uterus {
+            width: 140px;
+            height: 160px;
+            border-radius: 20px 20px 70px 70px;
+        }
+        
+        .nav-btn {
+            transition: all 0.2s;
+        }
+        .nav-btn.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
+
+    <!-- Chosen Palette: Warm Neutrals (Slate-50 to Slate-800) with Medical Blue Accents (Blue-600) for a clinical, professional, and trustworthy feel. -->
+    
+    <!-- Application Structure Plan: 
+         1. Header & Navigation: A dashboard-style top navigation allowing users to jump between logical phases of a medical case study (Scenario -> Anatomy -> Pathology -> Summary). This prevents overwhelming the user with a massive wall of text.
+         2. Scenario (สถานการณ์): Presents the raw data (patient profile, symptoms) just like the source document's format for Groups 1-6.
+         3. Anatomy Interaction (กายวิภาคศาสตร์): Uses an interactive HTML/CSS grid to simulate a body map. Clicking parts reveals the anatomical correlation and blood supply requested in the prompt's assignment format.
+         4. Pathology & Data (พยาธิสภาพ): Uses Chart.js to visualize statistics related to the disease, making the epidemiology and causes easier to digest than bullet points.
+         Reasoning: This structure perfectly mirrors the analytical flow a medical student uses: "Who is the patient?" -> "Where is the problem?" -> "Why did it happen?".
+    -->
+
+    <!-- Visualization & Content Choices: 
+         - Goal: Inform about patient status -> Method: Styled text cards (HTML/CSS) -> Interaction: None -> Justification: Clear readability of critical baseline data.
+         - Goal: Organize & Explain Anatomical parts -> Method: Interactive HTML/CSS block diagram (NO SVG) -> Interaction: Clickable organs updating a details panel -> Justification: Directly answers the "anatomical structure" and "blood supply" questions from the source PDF interactively.
+         - Goal: Compare disease locations -> Method: Chart.js Doughnut Chart -> Interaction: Hover tooltips -> Justification: Shows the proportion of ectopic pregnancy locations clearly.
+         - Goal: Analyze Risk Factors -> Method: Chart.js Bar Chart -> Interaction: Hover tooltips -> Justification: Quantifies the "causes" of the disease requested in the PDF.
+         - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. HTML/CSS and Canvas only.
+    -->
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold tracking-tight">Case Presentation: กลุ่มที่ 7</h1>
+            <p class="mt-2 text-blue-200 text-lg">การวิเคราะห์ผู้ป่วยแบบเจาะลึก: ระบบสืบพันธุ์เพศหญิง (Female Reproductive System)</p>
+            <div class="mt-2 text-sm bg-blue-800 inline-block px-3 py-1 rounded text-blue-100">
+                *หมายเหตุ: จำลองเนื้อหาเชิงลึกให้สอดคล้องกับรูปแบบคำถามของกลุ่ม 1-6 ในเอกสาร
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-2 justify-center sm:justify-start" id="nav-container">
+            <button onclick="switchTab('tab-scenario')" class="nav-btn active px-5 py-2 rounded-full border border-gray-300 font-medium hover:bg-gray-50 focus:outline-none">1. สถานการณ์ผู้ป่วย</button>
+            <button onclick="switchTab('tab-anatomy')" class="nav-btn px-5 py-2 rounded-full border border-gray-300 font-medium hover:bg-gray-50 focus:outline-none">2. กายวิภาคศาสตร์</button>
+            <button onclick="switchTab('tab-pathology')" class="nav-btn px-5 py-2 rounded-full border border-gray-300 font-medium hover:bg-gray-50 focus:outline-none">3. สาเหตุและสถิติ</button>
+            <button onclick="switchTab('tab-summary')" class="nav-btn px-5 py-2 rounded-full border border-gray-300 font-medium hover:bg-gray-50 focus:outline-none">4. บทสรุป</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+
+        <!-- TAB 1: Scenario -->
+        <section id="tab-scenario" class="tab-content active">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-blue-600 pl-3 mb-4">สถานการณ์จำลอง (Case Scenario)</h2>
+                <p class="text-gray-600 leading-relaxed text-lg bg-white p-6 rounded-lg shadow-sm">
+                    ส่วนนี้แสดงข้อมูลพื้นฐานของผู้ป่วย อาการนำ และผลการตรวจร่างกายเบื้องต้น เพื่อใช้เป็นจุดเริ่มต้นในการสืบค้นโครงสร้างทางกายวิภาคศาสตร์ที่เกิดความผิดปกติ ตามวัตถุประสงค์ของการวิเคราะห์กรณีศึกษา
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Patient Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 md:col-span-1">
+                    <div class="bg-blue-600 text-white px-6 py-4">
+                        <h3 class="text-xl font-semibold flex justify-between items-center">
+                            <span>ข้อมูลผู้ป่วย</span>
+                            <span class="text-2xl">♀</span>
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-4">
+                            <li class="flex justify-between border-b border-gray-100 pb-2">
+                                <span class="text-gray-500">เพศ/อายุ</span>
+                                <span class="font-medium text-gray-800">หญิง, 28 ปี</span>
+                            </li>
+                            <li class="flex justify-between border-b border-gray-100 pb-2">
+                                <span class="text-gray-500">ประวัติประจำเดือน</span>
+                                <span class="font-medium text-red-600">ขาดประจำเดือน 7 สัปดาห์</span>
+                            </li>
+                            <li class="flex justify-between pb-2">
+                                <span class="text-gray-500">สัญญาณชีพ (Vitals)</span>
+                                <div class="text-right">
+                                    <span class="block font-medium text-gray-800">BP 90/60 mmHg (ต่ำ)</span>
+                                    <span class="block font-medium text-gray-800">HR 110 bpm (เร็ว)</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Symptoms Card -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 md:col-span-2">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                        <h3 class="text-xl font-semibold text-gray-800">อาการแสดง (Chief Complaints)</h3>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h4 class="font-semibold text-red-800 mb-2">ปวดท้องเฉียบพลัน</h4>
+                            <p class="text-gray-700 text-sm">ผู้ป่วยมีอาการปวดท้องน้อยด้านขวา (Right lower quadrant pain) อย่างรุนแรงและเฉียบพลัน มีลักษณะปวดแบบบิดเกร็ง</p>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                            <h4 class="font-semibold text-orange-800 mb-2">เลือดออกผิดปกติ</h4>
+                            <p class="text-gray-700 text-sm">มีเลือดออกกะปริดกะปรอยทางช่องคลอด (Vaginal bleeding) สีน้ำตาลคล้ำ</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 sm:col-span-2">
+                            <h4 class="font-semibold text-blue-800 mb-2">ผลการตรวจร่างกาย (Physical Exam)</h4>
+                            <p class="text-gray-700 text-sm">หน้าซีด (Pallor), กดเจ็บและมี Rebound tenderness บริเวณท้องน้อยด้านขวา บ่งชี้ถึงภาวะระคายเคืองในช่องท้อง (Peritoneal signs)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button onclick="switchTab('tab-anatomy')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                    วิเคราะห์โครงสร้างทางกายวิภาค &rarr;
+                </button>
+            </div>
+        </section>
+
+        <!-- TAB 2: Anatomy -->
+        <section id="tab-anatomy" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-green-600 pl-3 mb-4">ความสัมพันธ์กับโครงสร้างทางกายวิภาคศาสตร์</h2>
+                <p class="text-gray-600 leading-relaxed text-lg bg-white p-6 rounded-lg shadow-sm">
+                    ส่วนนี้ตอบคำถามหลักของรายงาน: "อวัยวะใดในบริเวณนี้ที่เกี่ยวข้อง และได้รับเลือดมาเลี้ยงจากหลอดเลือดใด" <b>โปรดคลิกที่ชิ้นส่วนอวัยวะในแผนภาพด้านล่าง</b> เพื่อดูรายละเอียดทางกายวิภาคและพยาธิสภาพที่เกิดขึ้นในผู้ป่วยรายนี้
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Interactive Diagram (HTML/CSS Based) -->
+                <div>
+                    <h3 class="text-lg font-semibold text-center mb-4 text-gray-700">แผนภาพจำลองระบบสืบพันธุ์เพศหญิง (คลิกเพื่อดูข้อมูล)</h3>
+                    <div class="anatomy-diagram h-80">
+                        <!-- Right Ovary (Left on screen) -->
+                        <div class="organ organ-ovary" onclick="showAnatomyData('ovary')">
+                            รังไข่<br><span class="text-xs font-normal">(Ovary)</span>
+                        </div>
+                        <!-- Right Fallopian Tube -->
+                        <div class="organ organ-tube bg-red-100 border-red-300 text-red-800" onclick="showAnatomyData('tube')" id="btn-tube">
+                            ท่อนำไข่<br><span class="text-xs font-normal">(Fallopian Tube)</span>
+                            <div class="absolute -mt-10 text-xl">⚠️</div>
+                        </div>
+                        <!-- Uterus -->
+                        <div class="organ organ-uterus" onclick="showAnatomyData('uterus')">
+                            มดลูก<br><span class="text-xs font-normal">(Uterus)</span>
+                        </div>
+                        <!-- Left Fallopian Tube -->
+                        <div class="organ organ-tube" onclick="showAnatomyData('tube_normal')">
+                            ท่อนำไข่<br><span class="text-xs font-normal">(Fallopian Tube)</span>
+                        </div>
+                        <!-- Left Ovary -->
+                        <div class="organ organ-ovary" onclick="showAnatomyData('ovary')">
+                            รังไข่<br><span class="text-xs font-normal">(Ovary)</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-sm text-gray-500 mt-4">*จุดที่มีสัญลักษณ์ ⚠️ คือตำแหน่งที่สงสัยว่าเกิดพยาธิสภาพตามอาการของผู้ป่วย (กดเจ็บด้านขวา)</p>
+                </div>
+
+                <!-- Detail Panel -->
+                <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 flex flex-col justify-center min-h-[350px]" id="anatomy-details-panel">
+                    <div class="text-center text-gray-400 p-8">
+                        <span class="text-4xl block mb-4">👆</span>
+                        <p class="text-lg">คลิกที่อวัยวะในแผนภาพด้านซ้าย<br>เพื่อดูโครงสร้างและระบบหลอดเลือดที่เกี่ยวข้อง</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Pathology -->
+        <section id="tab-pathology" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-purple-600 pl-3 mb-4">สาเหตุการเกิดโรคและข้อมูลทางสถิติ</h2>
+                <p class="text-gray-600 leading-relaxed text-lg bg-white p-6 rounded-lg shadow-sm">
+                    วิเคราะห์สาเหตุเชิงลึกของโรค Ectopic Pregnancy แผนภูมิจะแสดงตำแหน่งทางกายวิภาคที่ตัวอ่อนมักไปฝังตัวผิดปกติ และปัจจัยเสี่ยงที่ทำให้โครงสร้างทางกายวิภาค (เช่น ซิเลียในท่อนำไข่) ทำงานผิดพลาด
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Chart 1: Locations -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-semibold text-center mb-2">ตำแหน่งที่เกิดการตั้งครรภ์นอกมดลูกบ่อยที่สุด</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">ความสัมพันธ์ทางสถิติกับโครงสร้างของ Fallopian tube</p>
+                    <div class="chart-container">
+                        <canvas id="locationChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-700 bg-purple-50 p-3 rounded-lg border border-purple-100">
+                        <b>วิเคราะห์:</b> บริเวณ <i>Ampulla</i> เป็นตำแหน่งที่มีพื้นที่กว้างที่สุดของท่อนำไข่ และเป็นจุดที่เกิดการปฏิสนธิ (Fertilization) หากตัวอ่อนไม่สามารถเคลื่อนที่ต่อไปยังมดลูกได้ทัน จะฝังตัวที่นี่
+                    </div>
+                </div>
+
+                <!-- Chart 2: Risk Factors -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-semibold text-center mb-2">ปัจจัยเสี่ยง (Risk Factors)</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6">สาเหตุที่ทำให้โครงสร้างท่อนำไข่ทำงานผิดปกติ</p>
+                    <div class="chart-container">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-700 bg-red-50 p-3 rounded-lg border border-red-100">
+                        <b>วิเคราะห์:</b> ภาวะอุ้งเชิงกรานอักเสบ (PID) ทำลายเนื้อเยื่อบุผิว (Epithelium) และ Cilia ภายในท่อนำไข่ ทำให้เกิดพังผืด (Adhesion) ขัดขวางการเคลื่อนที่ของตัวอ่อน
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Summary -->
+        <section id="tab-summary" class="tab-content">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 border-l-4 border-yellow-500 pl-3 mb-4">สรุปกรณีศึกษา (Conclusion)</h2>
+                <p class="text-gray-600 leading-relaxed text-lg bg-white p-6 rounded-lg shadow-sm">
+                    การเชื่อมโยงความรู้ระหว่างอาการทางคลินิกและโครงสร้างทางกายวิภาคศาสตร์พื้นฐาน (Gross Anatomy & Blood Supply) ของกรณีศึกษากลุ่มที่ 7
+                </p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+                <div class="bg-slate-800 text-white p-6">
+                    <h3 class="text-xl font-bold">โรค: Ectopic Pregnancy (การตั้งครรภ์นอกมดลูก) บริเวณท่อนำไข่ด้านขวา แตก (Ruptured)</h3>
+                </div>
+                <div class="p-6 md:p-10 space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-blue-100 text-blue-700 p-3 rounded-full font-bold text-xl">1</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">โครงสร้างที่เกิดพยาธิสภาพ</h4>
+                            <p class="text-gray-600 mt-1"><b>Fallopian tube (ท่อนำไข่)</b> ส่วน Ampulla ซึ่งมีลักษณะเป็นท่อบาง ไม่สามารถรองรับการเจริญเติบโตของตัวอ่อนได้ เมื่อตัวอ่อนโตขึ้นจึงทำให้ท่อนำไข่ปริแตก (Rupture) นำไปสู่อาการปวดท้องอย่างรุนแรง</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-4">
+                        <div class="bg-blue-100 text-blue-700 p-3 rounded-full font-bold text-xl">2</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">หลอดเลือดที่เกี่ยวข้อง (อ้างอิงจากคำถามในเอกสาร)</h4>
+                            <p class="text-gray-600 mt-1">เลือดปริมาณมากที่ตกในช่องท้อง (Hemoperitoneum) จนทำให้ผู้ป่วยมีภาวะความดันตก (BP 90/60) มาจากหลอดเลือดที่เลี้ยงท่อนำไข่ ได้แก่ แขนงของ <b>Uterine artery</b> (แขนงจาก Internal iliac artery) และ <b>Ovarian artery</b> (แขนงจาก Abdominal aorta) ที่ประสานกัน (Anastomosis) ในบริเวณนี้</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="bg-blue-100 text-blue-700 p-3 rounded-full font-bold text-xl">3</div>
+                        <div>
+                            <h4 class="text-lg font-bold text-gray-800">อาการปวดคล้ายไส้ติ่งอักเสบ (Right Lower Quadrant Pain)</h4>
+                            <p class="text-gray-600 mt-1">โครงสร้างของท่อนำไข่ด้านขวา วางตัวอยู่ใกล้กับไส้ติ่ง (Appendix) ในบริเวณ Right Iliac fossa การแยกโรค (Differential diagnosis) จึงมีความสำคัญอย่างยิ่ง โดยในผู้ป่วยหญิงวัยเจริญพันธุ์ ต้องนึกถึงภาวะนี้และซักประวัติการขาดประจำเดือนเสมอ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-6 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center text-sm">
+            <p>Interactive Case Study Analysis - Designed for Anatomy & Physiology Curriculum</p>
+            <p class="mt-2 text-gray-500">ข้อมูลนำเสนอในรูปแบบ Web Application แบบ Single-Page (SPA) เพื่อเสริมสร้างความเข้าใจ</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+
+            // Update Nav Button Styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('text-gray-700');
+            });
+            const activeBtn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-700');
+                activeBtn.classList.add('active');
+            }
+
+            // Render charts only when pathology tab is active to ensure proper canvas sizing
+            if(tabId === 'tab-pathology' && !chartsRendered) {
+                renderCharts();
+                chartsRendered = true;
+            }
+        }
+
+        // --- Anatomy Interactive Data ---
+        const anatomyData = {
+            'tube': {
+                title: 'Fallopian Tube (ท่อนำไข่ขวา - โครงสร้างเป้าหมาย)',
+                bgColor: 'bg-red-50',
+                borderColor: 'border-red-200',
+                titleColor: 'text-red-700',
+                content: `
+                    <div class="space-y-3 text-left">
+                        <p><b>ลักษณะทางกายวิภาค:</b> ท่อกล้ามเนื้อยาวประมาณ 10-12 ซม. แบ่งเป็น 4 ส่วน (Infundibulum, Ampulla, Isthmus, Intramural)</p>
+                        <p class="text-red-600 font-semibold bg-red-100 p-2 rounded">🔥 พยาธิสภาพในเคสนี้: การตั้งครรภ์นอกมดลูก (Ectopic Pregnancy)</p>
+                        <p><b>สาเหตุ:</b> ตัวอ่อน (Zygote) ไม่สามารถเคลื่อนตัวผ่านท่อนำไข่ไปฝังตัวที่มดลูกได้ทัน มักเกิดจากความเสียหายของขนกวาด (Cilia) ในชั้น Mucosa จากการอักเสบ (PID)</p>
+                        <p><b>หลอดเลือดที่เลี้ยง:</b> Tubal branches จาก <u>Uterine artery</u> และ <u>Ovarian artery</u> (เมื่อท่อแตก เลือดจากเส้นเลือดเหล่านี้จะตกในช่องท้องอย่างรวดเร็ว)</p>
+                    </div>
+                `
+            },
+            'tube_normal': {
+                title: 'Fallopian Tube (ท่อนำไข่ซ้าย - ปกติ)',
+                bgColor: 'bg-blue-50',
+                borderColor: 'border-blue-200',
+                titleColor: 'text-blue-700',
+                content: `
+                    <div class="space-y-3 text-left">
+                        <p><b>โครงสร้างจุลกายวิภาค (Histology):</b> ชั้นเมือก (Mucosa) ประกอบด้วยเซลล์เยื่อบุผิวชนิด Simple columnar epithelium ที่มี Cilia (Ciliated cells) ช่วยพัดโบกไข่ และเซลล์หลั่งสาร (Peg cells) ที่ให้อาหารแก่ไข่</p>
+                        <p><b>สภาวะปกติ:</b> ทำหน้าที่เป็นทางผ่านและสถานที่ปฏิสนธิระหว่างอสุจิและไข่</p>
+                    </div>
+                `
+            },
+            'uterus': {
+                title: 'Uterus (มดลูก)',
+                bgColor: 'bg-purple-50',
+                borderColor: 'border-purple-200',
+                titleColor: 'text-purple-700',
+                content: `
+                    <div class="space-y-3 text-left">
+                        <p><b>ลักษณะทางกายวิภาค:</b> อวัยวะกล้ามเนื้อรูปชมพู่ มีผนังหนา 3 ชั้น: Perimetrium, Myometrium (กล้ามเนื้อเรียบ), Endometrium (เยื่อบุโพรงมดลูก)</p>
+                        <p><b>พยาธิสภาพในเคสนี้:</b> แม้ผู้ป่วยจะขาดประจำเดือนและเยื่อบุโพรงมดลูกหนาตัวขึ้นเพื่อรอรับการฝังตัว แต่<b>ไม่พบถุงการตั้งครรภ์ในโพรงมดลูก</b> (Empty uterus on Ultrasound)</p>
+                        <p><b>หลอดเลือดที่เลี้ยง:</b> <u>Uterine artery</u> (หลัก) วิ่งมาทางด้านข้างมดลูกใน Broad ligament</p>
+                    </div>
+                `
+            },
+            'ovary': {
+                title: 'Ovary (รังไข่)',
+                bgColor: 'bg-green-50',
+                borderColor: 'border-green-200',
+                titleColor: 'text-green-700',
+                content: `
+                    <div class="space-y-3 text-left">
+                        <p><b>ลักษณะทางกายวิภาค:</b> ต่อมไร้ท่อขนาดเท่าเมล็ดอัลมอนด์ ทำหน้าที่สร้างเซลล์ไข่ (Ova) และฮอร์โมนเพศหญิง (Estrogen, Progesterone)</p>
+                        <p><b>โครงสร้างที่เกี่ยวข้อง:</b> ยึดติดกับมดลูกด้วย Ovarian ligament และยึดกับผนังเชิงกรานด้วย Suspensory ligament (ซึ่งมีหลอดเลือดรังไข่วิ่งผ่าน)</p>
+                        <p><b>หลอดเลือดที่เลี้ยง:</b> <u>Ovarian artery</u> (แตกแขนงโดยตรงมาจาก Abdominal aorta ระดับ L2)</p>
+                    </div>
+                `
+            }
+        };
+
+        function showAnatomyData(organKey) {
+            // Reset active states
+            document.querySelectorAll('.organ').forEach(el => el.classList.remove('active', 'scale-105'));
+            
+            // Highlight clicked
+            event.currentTarget.classList.add('active', 'scale-105');
+
+            const data = anatomyData[organKey];
+            const panel = document.getElementById('anatomy-details-panel');
+            
+            // Build dynamic HTML
+            panel.innerHTML = `
+                <div class="h-full w-full ${data.bgColor} border ${data.borderColor} rounded-lg p-6 animation-fadeIn">
+                    <h4 class="text-xl font-bold ${data.titleColor} border-b border-gray-200 pb-3 mb-4">${data.title}</h4>
+                    <div class="text-gray-700 text-sm leading-relaxed">${data.content}</div>
+                </div>
+            `;
+        }
+
+        // --- Chart.js Data and Initialization ---
+        let chartsRendered = false;
+
+        function renderCharts() {
+            // Chart 1: Ectopic Pregnancy Locations (Doughnut)
+            const ctxLocation = document.getElementById('locationChart').getContext('2d');
+            new Chart(ctxLocation, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ampulla (ส่วนกว้างที่สุด)', 'Isthmus (ส่วนแคบ)', 'Fimbriae (ปลายท่อ)', 'Ovary/Abdominal (อื่นๆ)'],
+                    datasets: [{
+                        data: [80, 12, 5, 3],
+                        backgroundColor: [
+                            'rgba(139, 92, 246, 0.8)', // Violet
+                            'rgba(236, 72, 153, 0.8)', // Pink
+                            'rgba(59, 130, 246, 0.8)', // Blue
+                            'rgba(156, 163, 175, 0.8)'  // Gray
+                        ],
+                        borderColor: ['#fff', '#fff', '#fff', '#fff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // CRUCIAL for chart container adherence
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Prompt' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // Chart 2: Risk Factors (Horizontal Bar)
+            const ctxRisk = document.getElementById('riskChart').getContext('2d');
+            new Chart(ctxRisk, {
+                type: 'bar',
+                data: {
+                    labels: ['ภาวะอักเสบในอุ้งเชิงกราน (PID)', 'เคยตั้งครรภ์นอกมดลูกมาก่อน', 'พังผืดจากการผ่าตัดช่องท้อง', 'การสูบบุหรี่ (ทำลาย Cilia)', 'อายุ > 35 ปี'],
+                    datasets: [{
+                        label: 'ระดับความเสี่ยง (Relative Risk)',
+                        data: [7.5, 6.0, 4.0, 2.5, 1.5],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)', // Red
+                        borderColor: 'rgb(220, 38, 38)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bar chart
+                    responsive: true,
+                    maintainAspectRatio: false, // CRUCIAL for chart container adherence
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    // Wrap label logic (simulated by simple string return here, ChartJS handles basic wrap)
+                                    return ' เพิ่มความเสี่ยง: ' + context.raw + ' เท่า';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'อัตราความเสี่ยงที่เพิ่มขึ้น (เท่า)', font: { family: 'Prompt' } }
+                        },
+                        y: {
+                            ticks: { font: { family: 'Prompt' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize active nav styling on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeBtn = document.querySelector(`button[onclick="switchTab('tab-scenario')"]`);
+            if(activeBtn) {
+                activeBtn.classList.remove('text-gray-700');
+                activeBtn.classList.add('active', 'bg-blue-600', 'text-white');
+            }
+        });
+    </script>
+</body>
+</html>
